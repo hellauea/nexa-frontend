@@ -99,10 +99,7 @@
 
   <div class="aurora-bg"></div>
 
-  <!-- Main Interface Container 
-       Mobile: Full width/height (w-full h-full), no rounding.
-       Desktop (md): Fixed size (max-w-5xl h-[90vh]), rounded corners. 
-  -->
+  <!-- Main Interface Container -->
   <div class="w-full h-full md:h-[90vh] md:max-w-5xl flex flex-col bg-slate-900/60 backdrop-blur-xl md:rounded-3xl md:shadow-2xl md:border md:border-white/10 relative overflow-hidden transition-all">
     
     <!-- Header -->
@@ -146,7 +143,7 @@
 
     <!-- Input Area -->
     <div class="p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-900/95 to-transparent z-20 shrink-0">
-      <form id="chat-form" class="relative max-w-3xl mx-auto">
+      <form id="chat-form" class="relative max-w-3xl mx-auto" autocomplete="off">
         <div class="relative group">
           <!-- Mobile-friendly input container -->
           <div class="relative flex items-center bg-slate-800/80 md:bg-slate-950 rounded-full md:rounded-2xl border border-white/10 shadow-lg">
@@ -154,9 +151,13 @@
             <input 
               id="user-input" 
               type="text" 
+              name="chat_message"
               placeholder="Ask anything..." 
               class="w-full bg-transparent text-white py-3 md:py-4 pl-5 pr-24 rounded-full md:rounded-2xl focus:outline-none placeholder-slate-500 text-base"
-              autocomplete="off"
+              autocomplete="off" 
+              autocorrect="off" 
+              autocapitalize="off" 
+              spellcheck="false"
             />
             
             <!-- Buttons -->
