@@ -1,247 +1,335 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXA | Intelligent Core</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        cyber: {
-                            black: '#030304',
-                            dark: '#0A0A0F',
-                            panel: 'rgba(20, 25, 40, 0.6)',
-                            border: 'rgba(100, 200, 255, 0.1)',
-                            primary: '#00F0FF', // Cyber Cyan
-                            primaryDim: 'rgba(0, 240, 255, 0.1)',
-                            secondary: '#7000FF', // Neon Purple
-                            text: '#E0E6ED',
-                            muted: '#94A3B8'
-                        }
-                    },
-                    boxShadow: {
-                        'neon': '0 0 10px rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.1)',
-                        'neon-hover': '0 0 15px rgba(0, 240, 255, 0.4), 0 0 30px rgba(0, 240, 255, 0.2)',
-                    },
-                    animation: {
-                        'scanline': 'scanline 8s linear infinite',
-                        'pulse-glow': 'pulseGlow 3s infinite',
-                    },
-                    keyframes: {
-                        scanline: {
-                            '0%': { transform: 'translateY(-100%)' },
-                            '100%': { transform: 'translateY(100%)' }
-                        },
-                        pulseGlow: {
-                            '0%, 100%': { opacity: 0.5 },
-                            '50%': { opacity: 1 }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXA | Intelligent Assistant</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        body {
-            background-color: #030304;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-            color: #E0E6ED;
-        }
-        
-        .glass-panel {
-            background: var(--cyber-panel);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid theme('colors.cyber.border');
-        }
+  <!-- Google Fonts: Inter for Professional Look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        /* Code Block Styling */
-        pre {
-            background: #0e1015 !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 12px;
-            overflow-x: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            margin: 10px 0;
-        }
-        code {
-            color: #00F0FF;
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
-    </style>
-</head>
-<body class="h-screen w-full flex items-center justify-center overflow-hidden selection:bg-cyber-primary selection:text-cyber-black">
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- Main Container -->
-    <div class="relative w-full h-full max-w-5xl mx-auto flex flex-col bg-cyber-dark/80 border-x border-cyber-border shadow-2xl backdrop-blur-sm sm:my-4 sm:h-[95%] sm:rounded-2xl sm:border-y">
-        
-        <!-- Decorative Scanline -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-20 rounded-2xl">
-            <div class="w-full h-full bg-gradient-to-b from-transparent via-cyber-primary to-transparent h-[20%] animate-scanline opacity-10"></div>
-        </div>
+  <!-- Highlight.js (VS Code Dark Theme) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/vs2015.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
-        <!-- Header -->
-        <header class="flex items-center justify-between px-6 py-4 border-b border-cyber-border bg-cyber-black/40 z-10">
-            <div class="flex items-center gap-3">
-                <div class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-primary opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-cyber-primary"></span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-wider font-mono text-white">NEXA<span class="text-cyber-primary">_CORE</span></h1>
-                    <p class="text-[10px] text-cyber-primary uppercase tracking-[0.2em] opacity-70">System Online</p>
-                </div>
-            </div>
-            
-            <button id="clear-btn" class="group flex items-center gap-2 px-3 py-1.5 rounded border border-cyber-border hover:border-cyber-primary hover:bg-cyber-primaryDim transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyber-muted group-hover:text-cyber-primary transition-colors"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                <span class="text-xs font-mono text-cyber-muted group-hover:text-cyber-primary">RESET</span>
-            </button>
-        </header>
-
-        <!-- Chat Area -->
-        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 z-10 scroll-smooth">
-            <!-- Welcome Message -->
-            <div class="flex gap-4">
-                <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-                </div>
-                <div class="glass-panel p-4 rounded-xl rounded-tl-none max-w-[85%] shadow-lg">
-                    <p class="text-sm leading-relaxed">Greetings. I am <span class="text-cyber-primary font-bold">Nexa</span>. My systems are ready to assist you with coding, analysis, and data processing.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="p-6 border-t border-cyber-border bg-cyber-black/60 z-20">
-            <form id="chat-form" class="relative flex items-center">
-                <div class="absolute left-4 text-cyber-primary animate-pulse-glow">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                </div>
-                <input 
-                    type="text" 
-                    id="user-input" 
-                    class="w-full bg-black/50 border border-cyber-border rounded-lg py-4 pl-12 pr-14 text-sm text-white placeholder-cyber-muted/50 focus:outline-none focus:border-cyber-primary focus:ring-1 focus:ring-cyber-primary transition-all font-mono shadow-inner"
-                    placeholder="Enter command..."
-                    autocomplete="off"
-                >
-                <button 
-                    type="submit" 
-                    class="absolute right-2 p-2 bg-cyber-primary/10 hover:bg-cyber-primary hover:text-black text-cyber-primary rounded transition-all duration-200"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-            </form>
-        </div>
-
-    </div>
-
-    <script>
-const chatForm = document.getElementById('chat-form');
-const userInput = document.getElementById('user-input');
-const chatContainer = document.getElementById('chat-container');
-const clearBtn = document.getElementById('clear-btn');
-
-const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
-
-// Handle submit
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message) return;
-
-  appendMessage(message, 'user');
-  userInput.value = '';
-
-  const loadingId = showLoading();
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message })
-    });
-
-    const data = await response.json();
-    removeLoading(loadingId);
-
-    if (data.reply) {
-      appendMessage(data.reply, 'bot');
-    } else {
-      appendMessage("⚠️ No response from Nexa.", 'error');
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #020617; /* Slate 950 */
+      overflow: hidden;
     }
 
-  } catch (error) {
-    console.error(error);
-    removeLoading(loadingId);
-    appendMessage("⚠️ CONNECTION FAILURE: Failed to fetch", 'error');
-  }
-});
+    /* Subtle Aurora Background Animation */
+    .aurora-bg {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.15), transparent 50%),
+                  radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15), transparent 50%),
+                  radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.15), transparent 50%);
+      animation: aurora 20s ease-in-out infinite alternate;
+      z-index: -1;
+    }
 
-// Reset Chat
-clearBtn.addEventListener('click', () => {
-  chatContainer.innerHTML = '';
-  appendMessage("Memory purged. Systems reset.", 'bot');
-});
+    @keyframes aurora {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-5%, -5%) rotate(5deg); }
+    }
 
-// UI Functions
-function appendMessage(text, sender) {
-  const isUser = sender === 'user';
-  const wrapper = document.createElement('div');
-  wrapper.className = `flex gap-4 ${isUser ? 'justify-end' : ''}`;
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-  const bubbleStyle = isUser
-    ? 'bg-cyber-secondary/10 border-cyber-secondary/30 text-white rounded-tr-none'
-    : 'glass-panel rounded-tl-none text-gray-200';
+    /* Typing Animation (Gemini Style) */
+    .typing-dot {
+      animation: wave 1.5s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes wave {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50% { transform: translateY(-5px); opacity: 1; }
+    }
 
-  wrapper.innerHTML = `
-    <div class="${bubbleStyle} p-4 rounded-xl max-w-[85%] shadow-lg border text-sm leading-relaxed">
-      ${text}
+    /* Markdown Styles Refined */
+    .prose p { margin-bottom: 0.75em; line-height: 1.7; }
+    .prose pre { background: #1e1e1e !important; border-radius: 0.75rem; border: 1px solid #333; margin: 1em 0; }
+    .prose code { color: #e0e7ff; font-family: monospace; background: rgba(255,255,255,0.1); padding: 0.2em 0.4em; border-radius: 4px; }
+    .prose strong { color: #a5b4fc; font-weight: 600; }
+    .prose ul { list-style-type: disc; padding-left: 1.5em; color: #cbd5e1; }
+    .prose ol { list-style-type: decimal; padding-left: 1.5em; color: #cbd5e1; }
+    
+    /* Fade In Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message-enter {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    /* Helper to ensure hidden actually hides */
+    .force-hidden {
+        display: none !important;
+    }
+  </style>
+</head>
+<body class="text-slate-200 h-screen flex items-center justify-center selection:bg-indigo-500/30 selection:text-indigo-200">
+
+  <!-- Ambient Background -->
+  <div class="aurora-bg"></div>
+
+  <!-- Main Interface -->
+  <div class="w-full max-w-5xl h-[95vh] md:h-[90vh] flex flex-col bg-slate-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 relative overflow-hidden">
+    
+    <!-- Header -->
+    <header class="px-8 py-5 border-b border-white/5 flex items-center justify-between bg-slate-900/40 z-20">
+      <div class="flex items-center gap-4">
+        <div>
+          <div class="relative inline-block">
+             <h1 class="text-2xl font-bold tracking-tight text-white">NEXA</h1>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-3">
+        <button onclick="location.reload()" class="w-9 h-9 rounded-full hover:bg-white/5 flex items-center justify-center text-slate-400 transition-all" title="New Chat">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Area -->
+    <div id="chat" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 scroll-smooth">
+      <!-- Welcome Screen -->
+      <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center space-y-6 animate-fade-in">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-[1px] shadow-2xl shadow-indigo-500/20">
+          <div class="w-full h-full bg-slate-900/90 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+             <i class="fa-solid fa-bolt text-3xl text-transparent bg-clip-text bg-gradient-to-tr from-blue-400 to-purple-400"></i>
+          </div>
+        </div>
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">Hello, Human.</h2>
+          <p class="text-slate-400 text-lg max-w-md mx-auto">I am Nexa. How can I help you accelerate your work today?</p>
+        </div>
+        
+        <!-- Suggestion Chips -->
+        <div class="flex flex-wrap justify-center gap-3 mt-8">
+          <button onclick="fillInput('Analyze this code for vulnerabilities')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-sm text-slate-300 transition-colors">🛡️ Security Audit</button>
+          <button onclick="fillInput('Explain Quantum Cryptography')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-sm text-slate-300 transition-colors">⚛️ Quantum Crypto</button>
+          <button onclick="fillInput('Write a Python script for network scanning')" class="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-sm text-slate-300 transition-colors">🐍 Python Script</button>
+        </div>
+      </div>
     </div>
-  `;
 
-  chatContainer.appendChild(wrapper);
+    <!-- Loading Indicator (Explicitly Hidden by Default) -->
+    <div id="typing-indicator" class="hidden px-10 py-4 items-center gap-2 text-slate-400">
+      <div class="w-2 h-2 bg-indigo-500 rounded-full typing-dot"></div>
+      <div class="w-2 h-2 bg-violet-500 rounded-full typing-dot"></div>
+      <div class="w-2 h-2 bg-fuchsia-500 rounded-full typing-dot"></div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-6 md:p-8 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent z-20">
+      <form id="chat-form" class="relative max-w-3xl mx-auto">
+        <div class="relative group">
+          <!-- Glowing Border Effect -->
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl opacity-20 group-hover:opacity-60 group-focus-within:opacity-100 transition duration-500 blur-[2px]"></div>
+          
+          <div class="relative flex items-center bg-slate-950 rounded-2xl border border-white/10 shadow-xl">
+            <input 
+              id="user-input" 
+              type="text" 
+              placeholder="Ask anything..." 
+              class="w-full bg-transparent text-white p-4 pl-6 pr-14 rounded-2xl focus:outline-none placeholder-slate-500 text-lg font-light"
+              autocomplete="off"
+            />
+            <button type="submit" class="absolute right-2 p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </div>
+        </div>
+        <p class="text-center text-xs text-slate-600 mt-3">NEXA can make mistakes. Please verify critical information.</p>
+      </form>
+    </div>
+
+  </div>
+
+<script>
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
+let conversation = [];
+
+const chatContainer = document.getElementById('chat');
+const welcomeScreen = document.getElementById('welcome-screen');
+const typingIndicator = document.getElementById('typing-indicator');
+
+// Helper for suggestion chips
+function fillInput(text) {
+  const input = document.getElementById('user-input');
+  input.value = text;
+  input.focus();
+}
+
+// Markdown Configuration
+marked.setOptions({
+  highlight: function(code, lang) {
+    const language = highlight.getLanguage(lang) ? lang : 'plaintext';
+    return highlight.highlight(code, { language }).value;
+  },
+  langPrefix: 'hljs language-'
+});
+
+function scrollToBottom() {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-function showLoading() {
-  const id = 'loader-' + Date.now();
-  const html = `
-    <div id="${id}" class="text-cyber-primary italic text-sm">Nexa is thinking...</div>
+// Typing Indicator Logic
+function showTyping() {
+    typingIndicator.classList.remove('hidden');
+    typingIndicator.classList.add('flex'); // Use flex to align dots
+    scrollToBottom();
+}
+
+function hideTyping() {
+    typingIndicator.classList.add('hidden');
+    typingIndicator.classList.remove('flex');
+}
+
+function addMessage(text, sender) {
+  if (welcomeScreen) welcomeScreen.style.display = 'none';
+
+  const div = document.createElement('div');
+  const isBot = sender === 'bot';
+  
+  div.className = `flex w-full ${isBot ? 'justify-start' : 'justify-end'} message-enter mb-8`;
+  
+  const content = isBot ? marked.parse(text) : text;
+
+  div.innerHTML = `
+    <div class="flex flex-col max-w-[85%] md:max-w-[75%] ${isBot ? 'items-start' : 'items-end'}">
+      
+      <span class="text-xs font-bold tracking-wide text-slate-500 mb-2 ml-1 uppercase">${isBot ? 'NEXA' : 'YOU'}</span>
+
+      <div class="group relative">
+        <!-- Message Bubble -->
+        <div class="prose prose-invert text-[15px] p-5 rounded-2xl shadow-sm ${
+          isBot 
+            ? 'bg-slate-800/50 border border-white/5 text-slate-200 backdrop-blur-sm rounded-tl-none' 
+            : 'bg-indigo-600 text-white rounded-tr-none shadow-lg shadow-indigo-500/10'
+        }">
+          <div class="leading-relaxed break-words">${content}</div>
+        </div>
+
+        <!-- Action Tools (Hover to show) -->
+        <div class="absolute top-full ${isBot ? 'left-0' : 'right-0'} mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button onclick="copyToClipboard(this)" class="p-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white text-xs border border-white/5 transition-colors" title="Copy">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+          ${isBot ? `
+          <button onclick="rethinkMessage(this)" class="p-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-indigo-400 text-xs border border-white/5 transition-colors" title="Regenerate">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
   `;
-  chatContainer.insertAdjacentHTML('beforeend', html);
-  return id;
+
+  chatContainer.appendChild(div);
+  scrollToBottom();
 }
 
-function removeLoading(id) {
-  const el = document.getElementById(id);
-  if (el) el.remove();
+function copyToClipboard(btn) {
+  const group = btn.closest('.group');
+  const messageBubble = group.querySelector('.prose');
+  const messageContent = messageBubble.innerText; 
+  
+  navigator.clipboard.writeText(messageContent);
+  
+  const icon = btn.querySelector('i');
+  icon.className = 'fa-solid fa-check text-emerald-400';
+  
+  setTimeout(() => {
+    icon.className = 'fa-regular fa-copy';
+  }, 2000);
 }
+
+async function rethinkMessage(btn) {
+  const messageRow = btn.closest('.message-enter');
+  messageRow.remove();
+  
+  conversation.pop();
+
+  showTyping();
+
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ history: conversation })
+    });
+
+    const data = await res.json();
+    
+    hideTyping();
+
+    addMessage(data.reply, 'bot');
+    conversation.push({ role:'assistant', content: data.reply });
+    
+  } catch(err) {
+    hideTyping();
+    addMessage('**Connection Error:** Unable to reach Nexa servers.', 'bot');
+  }
+}
+
+document.getElementById('chat-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const input = document.getElementById('user-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+
+  addMessage(msg, 'user');
+  input.value = '';
+  input.focus();
+
+  conversation.push({ role:'user', content: msg });
+
+  showTyping();
+
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ history: conversation })
+    });
+
+    const data = await res.json();
+    
+    hideTyping();
+
+    addMessage(data.reply, 'bot');
+    conversation.push({ role:'assistant', content: data.reply });
+    
+  } catch(err) {
+    hideTyping();
+    addMessage('**Connection Error:** Unable to reach Nexa servers.', 'bot');
+  }
+});
 </script>
-
 </body>
 </html>
