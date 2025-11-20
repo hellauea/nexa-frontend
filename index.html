@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEXA | Intelligent Core</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+ src="https://cdn.tailwindcss.com"></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
@@ -159,6 +160,7 @@
     </div>
 
     <script>
+<script>
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
 const chatContainer = document.getElementById('chat-container');
@@ -166,7 +168,13 @@ const clearBtn = document.getElementById('clear-btn');
 
 const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
 
-// Handle submit
+let history = [];
+
+history.push({
+  role: "user",
+  parts: [{ text: "You are Nexa, created by a cybersecurity student from REVA University. Follow Nexa behaviour strictly." }]
+});
+
 chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const message = userInput.value.trim();
@@ -175,15 +183,15 @@ chatForm.addEventListener('submit', async (e) => {
   appendMessage(message, 'user');
   userInput.value = '';
 
+  history.push({ role: "user", parts: [{ text: message }] });
+
   const loadingId = showLoading();
 
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message })
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ history })
     });
 
     const data = await response.json();
@@ -191,28 +199,38 @@ chatForm.addEventListener('submit', async (e) => {
 
     if (data.reply) {
       appendMessage(data.reply, 'bot');
+      history.push({ role: "model", parts: [{ text: data.reply }] });
     } else {
       appendMessage("⚠️ No response from Nexa.", 'error');
     }
 
   } catch (error) {
-    console.error(error);
     removeLoading(loadingId);
-    appendMessage("⚠️ CONNECTION FAILURE: Failed to fetch", 'error');
+    appendMessage("⚠️ CONNECTION FAILURE", 'error');
   }
 });
 
-// Reset Chat
 clearBtn.addEventListener('click', () => {
   chatContainer.innerHTML = '';
-  appendMessage("Memory purged. Systems reset.", 'bot');
+  history = [];
+  appendMessage("Memory purged. Nexa systems rebooted.", 'bot');
 });
 
-// UI Functions
+
 function appendMessage(text, sender) {
   const isUser = sender === 'user';
   const wrapper = document.createElement('div');
   wrapper.className = `flex gap-4 ${isUser ? 'justify-end' : ''}`;
+
+  let formatted = text
+    .replace(/```([\s\S]*?)```/g, (match, code) => {
+      return `
+        <div class="relative code-block">
+          <button onclick="copyCode(this)" class="absolute top-2 right-2 text-xs px-2 py-1 bg-cyber-primary text-black rounded">COPY</button>
+          <pre><code>${code}</code></pre>
+        </div>
+      `;
+    });
 
   const bubbleStyle = isUser
     ? 'bg-cyber-secondary/10 border-cyber-secondary/30 text-white rounded-tr-none'
@@ -220,7 +238,7 @@ function appendMessage(text, sender) {
 
   wrapper.innerHTML = `
     <div class="${bubbleStyle} p-4 rounded-xl max-w-[85%] shadow-lg border text-sm leading-relaxed">
-      ${text}
+      ${formatted}
     </div>
   `;
 
@@ -230,16 +248,21 @@ function appendMessage(text, sender) {
 
 function showLoading() {
   const id = 'loader-' + Date.now();
-  const html = `
-    <div id="${id}" class="text-cyber-primary italic text-sm">Nexa is thinking...</div>
-  `;
-  chatContainer.insertAdjacentHTML('beforeend', html);
+  chatContainer.insertAdjacentHTML('beforeend', `<div id="${id}" class="text-cyber-primary italic">Nexa processing...</div>`);
   return id;
 }
 
 function removeLoading(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
+}
+
+// COPY BUTTON FUNCTION
+function copyCode(button){
+  const code = button.nextElementSibling.innerText;
+  navigator.clipboard.writeText(code);
+  button.innerText = "COPIED ✅";
+  setTimeout(() => button.innerText = "COPY", 1500);
 }
 </script>
 
