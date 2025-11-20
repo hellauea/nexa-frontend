@@ -159,143 +159,89 @@
     </div>
 
     <script>
-        const chatForm = document.getElementById('chat-form');
-        const userInput = document.getElementById('user-input');
-        const chatContainer = document.getElementById('chat-container');
-        const clearBtn = document.getElementById('clear-btn');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const chatContainer = document.getElementById('chat-container');
+const clearBtn = document.getElementById('clear-btn');
 
-        // === CONFIGURATION ===
-        const API_URL = "https://nexa-ai-backend-f5fi.onrender.com/ask";
-        let history = [];
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
 
-        // Initial Persona Context
-        history.push({
-            role: "model",
-            parts: [{ text: "Hello, I am Nexa." }]
-        });
+// Handle submit
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const message = userInput.value.trim();
+  if (!message) return;
 
-        // === EVENT LISTENERS ===
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const message = userInput.value.trim();
-            if (!message) return;
+  appendMessage(message, 'user');
+  userInput.value = '';
 
-            // 1. Display User Message
-            appendMessage(message, 'user');
-            userInput.value = '';
-            
-            // 2. Add to History
-            history.push({ role: "user", parts: [{ text: message }] });
+  const loadingId = showLoading();
 
-            // 3. Show Loading
-            const loadingId = showLoading();
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
 
-            try {
-                // 4. Send to Backend
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: history }) 
-                });
+    const data = await response.json();
+    removeLoading(loadingId);
 
-                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+    if (data.reply) {
+      appendMessage(data.reply, 'bot');
+    } else {
+      appendMessage("⚠️ No response from Nexa.", 'error');
+    }
 
-                const data = await response.json();
-                removeLoading(loadingId);
-                
-                const reply = data.reply || "Error: Empty response from neural net.";
-                
-                // 5. Display Bot Response
-                appendMessage(reply, 'bot');
-                
-                // 6. Update History
-                history.push({ role: "model", parts: [{ text: reply }] });
+  } catch (error) {
+    console.error(error);
+    removeLoading(loadingId);
+    appendMessage("⚠️ CONNECTION FAILURE: Failed to fetch", 'error');
+  }
+});
 
-            } catch (error) {
-                console.error(error);
-                removeLoading(loadingId);
-                appendMessage(`CONNECTION FAILURE: ${error.message}`, 'error');
-            }
-        });
+// Reset Chat
+clearBtn.addEventListener('click', () => {
+  chatContainer.innerHTML = '';
+  appendMessage("Memory purged. Systems reset.", 'bot');
+});
 
-        clearBtn.addEventListener('click', () => {
-            chatContainer.innerHTML = '';
-            history = [];
-            appendMessage("Memory purged. Systems reset.", 'bot');
-        });
+// UI Functions
+function appendMessage(text, sender) {
+  const isUser = sender === 'user';
+  const wrapper = document.createElement('div');
+  wrapper.className = `flex gap-4 ${isUser ? 'justify-end' : ''}`;
 
-        // === UI FUNCTIONS ===
-        function appendMessage(text, sender) {
-            const isUser = sender === 'user';
-            const isError = sender === 'error';
-            
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex gap-4 ${isUser ? 'justify-end' : ''} animate-[fadeIn_0.3s_ease-out]`;
+  const bubbleStyle = isUser
+    ? 'bg-cyber-secondary/10 border-cyber-secondary/30 text-white rounded-tr-none'
+    : 'glass-panel rounded-tl-none text-gray-200';
 
-            // Formatting (Simple Markdown)
-            let content = text
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                .replace(/`([^`]+)`/g, '<code class="bg-cyber-primaryDim px-1 rounded text-cyber-primary">$1</code>');
+  wrapper.innerHTML = `
+    <div class="${bubbleStyle} p-4 rounded-xl max-w-[85%] shadow-lg border text-sm leading-relaxed">
+      ${text}
+    </div>
+  `;
 
-            // Wrap code blocks in pre tags (simple detection)
-            if (content.includes('```')) {
-                content = content.replace(/```(\w+)?<br>([\s\S]*?)<br>```/g, '<pre><code>$2</code></pre>');
-                content = content.replace(/```<br>([\s\S]*?)<br>```/g, '<pre><code>$1</code></pre>');
-            }
+  chatContainer.appendChild(wrapper);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
-            const botIcon = `
-                <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-                </div>`;
+function showLoading() {
+  const id = 'loader-' + Date.now();
+  const html = `
+    <div id="${id}" class="text-cyber-primary italic text-sm">Nexa is thinking...</div>
+  `;
+  chatContainer.insertAdjacentHTML('beforeend', html);
+  return id;
+}
 
-            const userIcon = `
-                <div class="w-10 h-10 rounded bg-cyber-secondary/20 border border-cyber-secondary/50 flex items-center justify-center shrink-0">
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>`;
+function removeLoading(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+</script>
 
-            const bubbleStyle = isUser 
-                ? 'bg-cyber-secondary/10 border-cyber-secondary/30 text-white rounded-tr-none' 
-                : (isError ? 'bg-red-900/20 border-red-500/50 text-red-200' : 'glass-panel rounded-tl-none text-gray-200');
-
-            wrapper.innerHTML = `
-                ${!isUser ? botIcon : ''}
-                <div class="${bubbleStyle} p-4 rounded-xl max-w-[85%] shadow-lg border text-sm leading-relaxed break-words font-sans">
-                    ${content}
-                </div>
-                ${isUser ? userIcon : ''}
-            `;
-
-            chatContainer.appendChild(wrapper);
-            scrollToBottom();
-        }
-
-        function showLoading() {
-            const id = 'loader-' + Date.now();
-            const html = `
-                <div id="${id}" class="flex gap-4 animate-[fadeIn_0.3s_ease-out]">
-                    <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
-                        <svg class="animate-spin" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-                    </div>
-                    <div class="glass-panel p-4 rounded-xl rounded-tl-none flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce"></span>
-                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-                    </div>
-                </div>`;
-            chatContainer.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
-            return id;
-        }
-
-        function removeLoading(id) {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-        }
-
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    </script>
 </body>
 </html>
