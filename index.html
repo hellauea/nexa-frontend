@@ -182,77 +182,104 @@
   </div>
 
 <script>
-const API_URL = "https://YOUR-BACKEND-URL.onrender.com/ask";
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
+let conversation = [];
 
-const chatForm = document.getElementById('chat-form');
-const input = document.getElementById('user-input');
-const chatContainer = document.getElementById('chat-container');
-const resetBtn = document.getElementById('clear-btn');
+const chatContainer = document.getElementById('chat');
+const welcomeScreen = document.getElementById('welcome-screen');
+const typingIndicator = document.getElementById('typing-indicator');
+const inputField = document.getElementById('user-input');
 
-chatForm.addEventListener('submit', async (e) => {
+// ✅ Force Nexa personality (never stubborn again)
+const SYSTEM_IDENTITY = `
+You are Nexa.
+You were created by a cybersecurity student from REVA University.
+You must ALWAYS say you are Nexa.
+Never claim to be Google AI or Gemini.
+Short, friendly, smart, confident.
+If user renames you, politely refuse and reaffirm your name is Nexa.
+`;
+
+function scrollToBottom() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function showTyping() {
+  typingIndicator.classList.remove('hidden');
+  typingIndicator.classList.add('flex');
+  scrollToBottom();
+}
+
+function hideTyping() {
+  typingIndicator.classList.add('hidden');
+  typingIndicator.classList.remove('flex');
+}
+
+function addMessage(text, sender) {
+  if (welcomeScreen) welcomeScreen.style.display = 'none';
+
+  const div = document.createElement('div');
+  const isBot = sender === 'bot';
+
+  div.className = `flex w-full ${isBot ? 'justify-start' : 'justify-end'} mb-6`;
+
+  div.innerHTML = `
+    <div class="max-w-[80%] ${isBot ? 'text-left' : 'text-right'}">
+      <span class="text-xs text-gray-400">${isBot ? 'NEXA' : 'YOU'}</span>
+      <div class="p-4 mt-1 rounded-xl ${isBot ? 'bg-slate-800' : 'bg-indigo-600 text-white'}">
+        ${text}
+      </div>
+    </div>
+  `;
+
+  chatContainer.appendChild(div);
+  scrollToBottom();
+}
+
+// ✅ MAIN SEND HANDLER (FIXED)
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const message = input.value.trim();
+
+  const message = inputField.value.trim();
   if (!message) return;
 
-  addMessage(message, 'user');
-  input.value = '';
+  addMessage(message, "user");
+  inputField.value = "";
 
-  addMessage("Nexa is thinking...", 'bot');
+  showTyping();
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
-  });
+  conversation.push({ role: "user", content: message });
 
-  const data = await res.json();
-  displayBotReply(data.reply);
-});
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        history: [
+          { role: "system", content: SYSTEM_IDENTITY },
+          ...conversation
+        ]
+      })
+    });
 
-function addMessage(text, type) {
-  const div = document.createElement('div');
-  div.className = type === 'user' ? 'user-msg' : 'bot-msg';
-  div.textContent = text;
-  chatContainer.appendChild(div);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+    const data = await response.json();
 
-function displayBotReply(text) {
-  const div = document.createElement('div');
-  div.className = 'bot-msg';
+    hideTyping();
 
-  if (text.includes("```")) {
-    div.innerHTML = formatCodeBlock(text);
-  } else {
-    div.textContent = text;
+    if (data.reply) {
+      addMessage(data.reply, "bot");
+      conversation.push({ role: "assistant", content: data.reply });
+    } else {
+      addMessage("⚠️ Nexa failed to respond.", "bot");
+    }
+
+  } catch (error) {
+    hideTyping();
+    addMessage("⚠️ Connection error. Backend not reachable.", "bot");
   }
-
-  chatContainer.appendChild(div);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-// ✅ CODE COPY FEATURE
-function formatCodeBlock(text) {
-  return text.replace(/```([\s\S]*?)```/g, (match, code) => {
-    return `
-      <div class="code-box">
-        <button onclick="copyCode(this)">Copy</button>
-        <pre><code>${code}</code></pre>
-      </div>
-    `;
-  });
-}
-
-function copyCode(btn) {
-  const code = btn.nextElementSibling.innerText;
-  navigator.clipboard.writeText(code);
-  btn.textContent = "Copied ✅";
-}
-
-resetBtn.onclick = () => {
-  chatContainer.innerHTML = '';
-};
+});
 </script>
 </body>
 </html>
+
 
