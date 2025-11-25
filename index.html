@@ -82,6 +82,7 @@
       overflow-x: auto;
       margin: 1em 0;
       border: 1px solid #334155;
+      position: relative;
     }
     .prose code {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -123,6 +124,15 @@
     .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
     .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
 
+    /* Copy button animation */
+    @keyframes copySuccess {
+      0% { background-color: #10b981; }
+      100% { background-color: #374151; }
+    }
+    .copy-success {
+      animation: copySuccess 1s ease-in-out;
+    }
+
     /* Mobile Optimizations */
     @media (max-width: 640px) {
       .message-bubble {
@@ -131,6 +141,14 @@
       .input-container {
         padding: 12px !important;
       }
+    }
+
+    /* Action buttons hover effects */
+    .action-btn {
+      transition: all 0.2s ease;
+    }
+    .action-btn:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -150,9 +168,15 @@
         <p class="text-xs text-slate-400">Cybersecurity & Technology Assistant</p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-full border border-slate-700/50">
-        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+    <div class="flex items-center gap-3">
+      <button id="clear-chat" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 rounded-lg transition-all duration-200 border border-slate-700/50 text-xs action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+        </svg>
+        Clear Chat
+      </button>
+      <div class="flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-full border border-slate-700/50">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse" id="status-dot"></span>
         <span class="text-xs text-slate-300" id="connection-status">Online</span>
       </div>
     </div>
@@ -183,7 +207,7 @@
       
       <!-- Enhanced Microphone Button -->
       <button type="button" id="mic-btn" 
-              class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all duration-200 shrink-0 flex items-center justify-center border border-slate-700/50 hover:border-indigo-500/50 shadow-lg hover:shadow-indigo-500/10 group"
+              class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all duration-200 shrink-0 flex items-center justify-center border border-slate-700/50 hover:border-indigo-500/50 shadow-lg hover:shadow-indigo-500/10 group action-btn"
               title="Voice Input">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
@@ -209,7 +233,7 @@
 
       <!-- Enhanced Send Button -->
       <button type="submit" 
-              class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl transition-all duration-200 shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 shrink-0 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+              class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl transition-all duration-200 shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 shrink-0 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed action-btn"
               id="send-btn">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
           <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -228,13 +252,13 @@
         </span>
       </p>
       <p class="text-[10px] text-slate-600 mt-2">
-        Wano AI • Enterprise Edition • v2.0.0
+        Wano AI • Enterprise Edition • v2.1.0
       </p>
     </div>
   </div>
 
 <script>
-// Configuration - UPDATE THIS URL to your actual backend URL
+// Configuration - UPDATE THIS to your actual backend URL
 const API_URL = "https://your-wano-backend.onrender.com/ask";
 
 // DOM Elements
@@ -246,29 +270,38 @@ const statusText = document.getElementById("status-text");
 const sendBtn = document.getElementById("send-btn");
 const charCount = document.getElementById("char-count");
 const connectionStatus = document.getElementById("connection-status");
+const statusDot = document.getElementById("status-dot");
+const clearChatBtn = document.getElementById("clear-chat");
 
 // State Management
 let isProcessing = false;
+let conversationHistory = [];
+let lastUserMessage = "";
 
 // Test backend connection on startup
 async function testBackendConnection() {
   try {
-    const response = await fetch(API_URL.replace('/ask', ''), {
+    const testUrl = API_URL.includes('/ask') ? API_URL.replace('/ask', '') : API_URL;
+    const response = await fetch(testUrl, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
     
     if (response.ok) {
       connectionStatus.textContent = 'Online';
+      statusDot.className = 'w-2 h-2 bg-green-400 rounded-full animate-pulse';
       console.log('✅ Backend connection successful');
+      return true;
     } else {
       connectionStatus.textContent = 'Connection Issues';
-      connectionStatus.parentElement.querySelector('.bg-green-400').className = 'w-2 h-2 bg-yellow-400 rounded-full animate-pulse';
+      statusDot.className = 'w-2 h-2 bg-yellow-400 rounded-full animate-pulse';
+      return false;
     }
   } catch (error) {
     console.error('❌ Backend connection failed:', error);
     connectionStatus.textContent = 'Offline';
-    connectionStatus.parentElement.querySelector('.bg-green-400').className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+    statusDot.className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+    return false;
   }
 }
 
@@ -288,11 +321,13 @@ function updateCharCount() {
   }`;
 }
 
-function addMessage(text, sender) {
+function addMessage(text, sender, messageId = null) {
   const div = document.createElement("div");
   const isUser = sender === "user";
+  const id = messageId || Date.now().toString();
   
   div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} message-animation`;
+  div.id = `message-${id}`;
   
   const bubbleClass = isUser 
     ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl rounded-br-md shadow-2xl shadow-indigo-500/20" 
@@ -300,15 +335,178 @@ function addMessage(text, sender) {
 
   const contentHtml = isUser ? text : marked.parse(text);
 
+  // Action buttons for AI messages
+  const actionButtons = isUser ? '' : `
+    <div class="flex items-center gap-1 mt-3 pt-3 border-t border-slate-700/30">
+      <button class="copy-btn action-btn flex items-center gap-1 px-2 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg text-xs transition-colors" data-message="${id}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy
+      </button>
+      <button class="retry-btn action-btn flex items-center gap-1 px-2 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg text-xs transition-colors" data-message="${id}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 2v6h6"></path>
+          <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+          <path d="M21 22v-6h-6"></path>
+          <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+        </svg>
+        Retry
+      </button>
+      <button class="regenerate-btn action-btn flex items-center gap-1 px-2 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg text-xs transition-colors" data-message="${id}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3"/>
+        </svg>
+        Regenerate
+      </button>
+    </div>
+  `;
+
   div.innerHTML = `
     <div class="${bubbleClass} p-4 message-bubble max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] break-words text-sm sm:text-base leading-relaxed">
       ${contentHtml}
+      ${actionButtons}
     </div>
   `;
   
   chat.appendChild(div);
   scrollToBottom();
+  
+  // Add event listeners for action buttons
+  if (!isUser) {
+    setTimeout(() => {
+      const copyBtn = div.querySelector('.copy-btn');
+      const retryBtn = div.querySelector('.retry-btn');
+      const regenerateBtn = div.querySelector('.regenerate-btn');
+      
+      copyBtn?.addEventListener('click', () => copyMessage(text, copyBtn));
+      retryBtn?.addEventListener('click', () => retryMessage(id));
+      regenerateBtn?.addEventListener('click', () => regenerateMessage(id, text));
+    }, 100);
+  }
+  
   return div;
+}
+
+function copyMessage(text, button) {
+  navigator.clipboard.writeText(text).then(() => {
+    const originalHtml = button.innerHTML;
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Copied!
+    `;
+    button.classList.add('copy-success');
+    
+    setTimeout(() => {
+      button.innerHTML = originalHtml;
+      button.classList.remove('copy-success');
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
+  });
+}
+
+function retryMessage(messageId) {
+  const messageElement = document.getElementById(`message-${messageId}`);
+  if (messageElement) {
+    messageElement.remove();
+  }
+  
+  // Find the previous user message and resend it
+  const userMessages = Array.from(document.querySelectorAll('.flex.justify-end'));
+  const lastUserMessageElement = userMessages[userMessages.length - 1];
+  
+  if (lastUserMessageElement) {
+    const userText = lastUserMessageElement.querySelector('.message-bubble').textContent;
+    input.value = userText;
+    updateCharCount();
+    setTimeout(() => {
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }, 300);
+  }
+}
+
+function regenerateMessage(messageId, currentText) {
+  const messageElement = document.getElementById(`message-${messageId}`);
+  if (messageElement) {
+    messageElement.remove();
+  }
+  
+  // Use the same input to generate a new response
+  sendMessageToAI(lastUserMessage, true);
+}
+
+function sendMessageToAI(message, isRegeneration = false) {
+  if (isProcessing) return;
+  
+  isProcessing = true;
+  sendBtn.disabled = true;
+
+  if (!isRegeneration) {
+    addMessage(message, "user");
+    lastUserMessage = message;
+  }
+  
+  input.value = "";
+  updateCharCount();
+
+  // Show typing indicator
+  const typingIndicator = showTypingIndicator();
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: message })
+  })
+  .then(async (res) => {
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+    return res.json();
+  })
+  .then(data => {
+    removeTypingIndicator();
+    
+    if (data.reply) {
+      addMessage(data.reply, "ai");
+      conversationHistory.push({ role: "user", content: message });
+      conversationHistory.push({ role: "assistant", content: data.reply });
+    } else {
+      addMessage("I apologize, but I couldn't generate a response. Please try again.", "ai");
+    }
+  })
+  .catch(err => {
+    console.error("Chat error:", err);
+    removeTypingIndicator();
+    
+    if (err.message.includes('Failed to fetch')) {
+      addMessage(`
+        🌐 <strong>Connection Error</strong><br><br>
+        Please check:<br>
+        • Your internet connection<br>
+        • Backend server status<br>
+        • That your backend URL is correct<br><br>
+        <em>Current backend: ${API_URL}</em>
+      `, "ai");
+    } else if (err.name === 'AbortError') {
+      addMessage("⏱️ Request timeout. The server is taking too long to respond.", "ai");
+    } else if (err.message.includes('HTTP 5')) {
+      addMessage("🔧 Server error. The backend service is experiencing issues.", "ai");
+    } else {
+      addMessage("❌ Error: " + err.message, "ai");
+    }
+  })
+  .finally(() => {
+    isProcessing = false;
+    sendBtn.disabled = false;
+    input.focus();
+  });
 }
 
 function showTypingIndicator() {
@@ -337,6 +535,17 @@ function removeTypingIndicator() {
   if (indicator) {
     indicator.remove();
   }
+}
+
+function clearChat() {
+  const messages = Array.from(document.querySelectorAll('.flex.justify-start, .flex.justify-end'));
+  messages.forEach(message => {
+    if (!message.querySelector('.bg-slate-800/40')) { // Keep welcome message
+      message.remove();
+    }
+  });
+  conversationHistory = [];
+  lastUserMessage = "";
 }
 
 // --- Speech Recognition Setup ---
@@ -400,70 +609,10 @@ function resetMicState() {
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  
-  if (isProcessing) return;
-  
   const msg = input.value.trim();
   if (!msg) return;
 
-  isProcessing = true;
-  sendBtn.disabled = true;
-
-  // Add user message
-  addMessage(msg, "user");
-  input.value = "";
-  updateCharCount();
-
-  // Show typing indicator
-  const typingIndicator = showTypingIndicator();
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: msg }),
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    }
-
-    const data = await res.json();
-    
-    removeTypingIndicator();
-    
-    if (data.reply) {
-      addMessage(data.reply, "ai");
-    } else {
-      addMessage("I apologize, but I couldn't generate a response. Please try again.", "ai");
-    }
-
-  } catch (err) {
-    console.error("Chat error:", err);
-    removeTypingIndicator();
-    
-    if (err.name === 'AbortError') {
-      addMessage("⏱️ Request timeout. The server is taking too long to respond. Please try again.", "ai");
-    } else if (err.message.includes('Failed to fetch')) {
-      addMessage("🌐 Connection error. Please check:<br>• Your internet connection<br>• Backend server status<br>• CORS configuration", "ai");
-    } else if (err.message.includes('HTTP 5')) {
-      addMessage("🔧 Server error. The backend service is experiencing issues. Please try again later.", "ai");
-    } else {
-      addMessage("❌ Error: " + err.message, "ai");
-    }
-  } finally {
-    isProcessing = false;
-    sendBtn.disabled = false;
-    input.focus();
-  }
+  sendMessageToAI(msg);
 });
 
 // --- Event Listeners ---
@@ -477,18 +626,13 @@ input.addEventListener("keydown", (e) => {
   }
 });
 
+clearChatBtn.addEventListener("click", clearChat);
+
 // Auto-focus and initialize
 window.addEventListener('load', () => {
   input.focus();
   updateCharCount();
-  testBackendConnection(); // Test connection on startup
-});
-
-// Prevent form submission on Enter key in input
-input.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-  }
+  testBackendConnection();
 });
 
 // Online status indicator
@@ -498,7 +642,7 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
   connectionStatus.textContent = 'Offline';
-  connectionStatus.parentElement.querySelector('.w-2').className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+  statusDot.className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
 });
 </script>
 
