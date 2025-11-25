@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+const typingIndicator = document.getElementById('typing-indicator');
+const welcomeScreen = document.getElementById('welcome-screen');
+const form = document.getElementById('chat-form');
+const input = document.getElementById('user-input');
 
 
 function scrollToBottom(){ chatContainer.scrollTop = chatContainer.scrollHeight; }
@@ -6,29 +10,30 @@ function showTyping(){ typingIndicator.classList.remove('hidden'); }
 function hideTyping(){ typingIndicator.classList.add('hidden'); }
 
 
-function addMessage(text, sender){
-if(welcomeScreen) welcomeScreen.style.display = 'none';
+function addMessage(text, sender) {
+if (welcomeScreen) welcomeScreen.style.display = "none";
 
 
 const wrapper = document.createElement('div');
-wrapper.className = `flex w-full ${sender==='bot'?'justify-start':'justify-end'}`;
+wrapper.className = `flex w-full ${sender === 'bot' ? 'justify-start' : 'justify-end'}`;
 
 
-const avatar = sender==='bot' ? `
+const avatar = sender === 'bot' ? `
 <div class="w-8 h-8 rounded-full overflow-hidden mr-2 border border-white/20">
 <img src="wano-logo.png" class="w-full h-full object-cover" />
-</div>` : '';
+</div>
+` : '';
 
 
 const bubble = `
-<div class="max-w-[75%] p-4 rounded-2xl ${sender==='bot'
+<div class="max-w-[75%] p-4 rounded-2xl ${sender === 'bot'
 ? 'bg-slate-800/90 border border-white/5 text-slate-200 rounded-tl-none'
 : 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white rounded-tr-none'}">
-<div class="prose prose-invert">${sender==='bot'?marked.parse(text):text}</div>
+<div class="prose prose-invert">${sender === 'bot' ? marked.parse(text) : text}</div>
 </div>`;
 
 
-wrapper.innerHTML = sender==='bot' ? avatar + bubble : bubble;
+wrapper.innerHTML = sender === 'bot' ? avatar + bubble : bubble;
 chatContainer.appendChild(wrapper);
 scrollToBottom();
 return wrapper.querySelector('.prose');
@@ -38,11 +43,11 @@ return wrapper.querySelector('.prose');
 form.addEventListener('submit', async e => {
 e.preventDefault();
 const msg = input.value.trim();
-if(!msg) return;
+if (!msg) return;
 
 
 addMessage(msg, 'user');
-input.value='';
+input.value = '';
 showTyping();
 
 
@@ -65,18 +70,18 @@ const decoder = new TextDecoder();
 let final = '';
 
 
-while(true){
-const {value, done} = await reader.read();
-if(done) break;
+while (true) {
+const { value, done } = await reader.read();
+if (done) break;
 final += decoder.decode(value);
 botBox.innerHTML = marked.parse(final);
 scrollToBottom();
 }
 
 
-} catch(err) {
+} catch (err) {
 hideTyping();
-addMessage('Wano is currently offline ⚠️', 'bot');
+addMessage('⚠️ Wano is offline. Try again later.', 'bot');
 }
 });
 </script>
