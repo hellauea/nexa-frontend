@@ -258,8 +258,15 @@
   </div>
 
 <script>
-// Configuration - UPDATE THIS to your actual backend URL
-const API_URL = "https://your-wano-backend.onrender.com/ask";
+// ============================================================
+// ⚠️ IMPORTANT: UPDATE THE URL BELOW WITH YOUR ACTUAL BACKEND
+// ============================================================
+
+const API_URL = "https://wano-ai-backend-xyz789.onrender.com/ask";
+
+// ============================================================
+// ⚠️ REPLACE "YOUR-REAL-BACKEND-URL" WITH YOUR ACTUAL RENDER URL
+// ============================================================
 
 // DOM Elements
 const chat = document.getElementById("chat");
@@ -282,6 +289,8 @@ let lastUserMessage = "";
 async function testBackendConnection() {
   try {
     const testUrl = API_URL.includes('/ask') ? API_URL.replace('/ask', '') : API_URL;
+    console.log('Testing connection to:', testUrl);
+    
     const response = await fetch(testUrl, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -295,12 +304,28 @@ async function testBackendConnection() {
     } else {
       connectionStatus.textContent = 'Connection Issues';
       statusDot.className = 'w-2 h-2 bg-yellow-400 rounded-full animate-pulse';
+      console.log('❌ Backend responded with error:', response.status);
       return false;
     }
   } catch (error) {
     console.error('❌ Backend connection failed:', error);
     connectionStatus.textContent = 'Offline';
     statusDot.className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+    
+    // Show connection help message
+    if (API_URL.includes('YOUR-REAL-BACKEND-URL')) {
+      addMessage(`
+        🔧 <strong>Configuration Required</strong><br><br>
+        Please update the <code>API_URL</code> in the frontend code to point to your actual Render backend.<br><br>
+        <strong>Current URL:</strong> ${API_URL}<br><br>
+        <strong>Steps to fix:</strong><br>
+        1. Go to your Render dashboard<br>
+        2. Copy your backend URL (looks like https://your-app-name.onrender.com)<br>
+        3. Replace the API_URL in the code (Line 430)<br>
+        4. Redeploy your frontend
+      `, "ai");
+    }
+    
     return false;
   }
 }
@@ -354,12 +379,6 @@ function addMessage(text, sender, messageId = null) {
         </svg>
         Retry
       </button>
-      <button class="regenerate-btn action-btn flex items-center gap-1 px-2 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg text-xs transition-colors" data-message="${id}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3"/>
-        </svg>
-        Regenerate
-      </button>
     </div>
   `;
 
@@ -378,11 +397,9 @@ function addMessage(text, sender, messageId = null) {
     setTimeout(() => {
       const copyBtn = div.querySelector('.copy-btn');
       const retryBtn = div.querySelector('.retry-btn');
-      const regenerateBtn = div.querySelector('.regenerate-btn');
       
       copyBtn?.addEventListener('click', () => copyMessage(text, copyBtn));
       retryBtn?.addEventListener('click', () => retryMessage(id));
-      regenerateBtn?.addEventListener('click', () => regenerateMessage(id, text));
     }, 100);
   }
   
@@ -390,7 +407,10 @@ function addMessage(text, sender, messageId = null) {
 }
 
 function copyMessage(text, button) {
-  navigator.clipboard.writeText(text).then(() => {
+  // Remove HTML tags for plain text copy
+  const plainText = text.replace(/<[^>]*>/g, '');
+  
+  navigator.clipboard.writeText(plainText).then(() => {
     const originalHtml = button.innerHTML;
     button.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -415,40 +435,19 @@ function retryMessage(messageId) {
     messageElement.remove();
   }
   
-  // Find the previous user message and resend it
-  const userMessages = Array.from(document.querySelectorAll('.flex.justify-end'));
-  const lastUserMessageElement = userMessages[userMessages.length - 1];
-  
-  if (lastUserMessageElement) {
-    const userText = lastUserMessageElement.querySelector('.message-bubble').textContent;
-    input.value = userText;
-    updateCharCount();
-    setTimeout(() => {
-      form.dispatchEvent(new Event('submit', { cancelable: true }));
-    }, 300);
+  if (lastUserMessage) {
+    sendMessageToAI(lastUserMessage);
   }
 }
 
-function regenerateMessage(messageId, currentText) {
-  const messageElement = document.getElementById(`message-${messageId}`);
-  if (messageElement) {
-    messageElement.remove();
-  }
-  
-  // Use the same input to generate a new response
-  sendMessageToAI(lastUserMessage, true);
-}
-
-function sendMessageToAI(message, isRegeneration = false) {
+function sendMessageToAI(message) {
   if (isProcessing) return;
   
   isProcessing = true;
   sendBtn.disabled = true;
 
-  if (!isRegeneration) {
-    addMessage(message, "user");
-    lastUserMessage = message;
-  }
+  addMessage(message, "user");
+  lastUserMessage = message;
   
   input.value = "";
   updateCharCount();
@@ -488,11 +487,13 @@ function sendMessageToAI(message, isRegeneration = false) {
     if (err.message.includes('Failed to fetch')) {
       addMessage(`
         🌐 <strong>Connection Error</strong><br><br>
-        Please check:<br>
+        Unable to connect to the backend server.<br><br>
+        <strong>Current backend URL:</strong><br>
+        <code>${API_URL}</code><br><br>
+        <strong>Please check:</strong><br>
         • Your internet connection<br>
-        • Backend server status<br>
-        • That your backend URL is correct<br><br>
-        <em>Current backend: ${API_URL}</em>
+        • That the backend URL is correct<br>
+        • That your Render backend is running
       `, "ai");
     } else if (err.name === 'AbortError') {
       addMessage("⏱️ Request timeout. The server is taking too long to respond.", "ai");
