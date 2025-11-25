@@ -1,238 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wano Chat Interface</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Marked.js for Markdown parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <style>
-        /* Custom scrollbar for a cleaner look */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; 
-        }
-        
-        .typing-dot {
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-    </style>
-</head>
-<body class="bg-slate-900 text-slate-200 h-screen flex flex-col font-sans overflow-hidden">
+class="flex-1 bg-slate-800 p-4 rounded-xl outline-none">
+<button class="bg-purple-600 px-5 rounded-xl">Send</button>
+</form>
+</footer>
 
-    <!-- Header -->
-    <header class="bg-slate-800/50 backdrop-blur border-b border-white/5 p-4 flex items-center justify-between z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-fuchsia-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20">
-                W
-            </div>
-            <h1 class="font-bold text-lg tracking-wide text-white">Wano AI</h1>
-        </div>
-        <div class="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded border border-white/5">
-            v1.0.0
-        </div>
-    </header>
-
-    <!-- Main Chat Container -->
-    <main class="flex-1 relative overflow-hidden flex flex-col">
-        
-        <!-- Welcome Screen (Placeholder) -->
-        <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center z-0 p-6 text-center">
-            <div class="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-tr from-slate-800 to-slate-700 border border-white/5 flex items-center justify-center shadow-2xl">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-fuchsia-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-white mb-2">How can I help you today?</h2>
-            <p class="text-slate-400 max-w-md">I'm ready to answer questions, write code, or just chat. Type a message below to get started.</p>
-        </div>
-
-        <!-- Chat Messages Area -->
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6 z-10 scroll-smooth">
-            <!-- Messages will be injected here -->
-        </div>
-
-        <!-- Typing Indicator -->
-        <div id="typing-indicator" class="hidden px-4 py-2 z-10">
-            <div class="flex items-center space-x-2 bg-slate-800/80 border border-white/5 w-fit px-4 py-3 rounded-2xl rounded-tl-none">
-                <div class="w-2 h-2 bg-fuchsia-500 rounded-full typing-dot"></div>
-                <div class="w-2 h-2 bg-fuchsia-500 rounded-full typing-dot"></div>
-                <div class="w-2 h-2 bg-fuchsia-500 rounded-full typing-dot"></div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Input Area -->
-    <footer class="p-4 bg-slate-900 border-t border-white/5 z-20">
-        <form id="chat-form" class="max-w-4xl mx-auto relative flex items-end gap-2 bg-slate-800/50 p-2 rounded-xl border border-white/10 focus-within:border-fuchsia-500/50 focus-within:bg-slate-800 transition-all shadow-lg">
-            <input 
-                type="text" 
-                id="user-input" 
-                class="w-full bg-transparent border-none text-white placeholder-slate-400 focus:ring-0 px-4 py-3 max-h-32"
-                placeholder="Message Wano..." 
-                autocomplete="off"
-            >
-            <button type="submit" class="p-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-lg transition-colors flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </button>
-        </form>
-        <div class="text-center mt-2">
-            <p class="text-[10px] text-slate-500">AI can make mistakes. Please verify important information.</p>
-        </div>
-    </footer>
 
 <script>
-    // --- Configuration ---
-    // Placeholder URL - In a real app, this would be your backend endpoint
-    const API_URL = 'https://jsonplaceholder.typicode.com/posts'; 
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask"; // ✅ YOUR REAL BACKEND
 
-    // --- DOM Elements ---
-    const typingIndicator = document.getElementById('typing-indicator');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const form = document.getElementById('chat-form');
-    const input = document.getElementById('user-input');
-    const chatContainer = document.getElementById('chat-container'); // Fixed: This was undefined in your snippet
 
-    // --- Helper Functions ---
-    function scrollToBottom() { 
-        chatContainer.scrollTop = chatContainer.scrollHeight; 
-    }
+const chatContainer = document.getElementById('chat-container');
+const typingIndicator = document.getElementById('typing-indicator');
+const welcomeScreen = document.getElementById('welcome-screen');
+const form = document.getElementById('chat-form');
+const input = document.getElementById('user-input');
 
-    function showTyping() { 
-        typingIndicator.classList.remove('hidden'); 
-        scrollToBottom();
-    }
 
-    function hideTyping() { 
-        typingIndicator.classList.add('hidden'); 
-    }
+function scrollToBottom(){ chatContainer.scrollTop = chatContainer.scrollHeight; }
+function showTyping(){ typingIndicator.classList.remove('hidden'); }
+function hideTyping(){ typingIndicator.classList.add('hidden'); }
 
-    function addMessage(text, sender) {
-        // Hide welcome screen on first message
-        if (welcomeScreen && welcomeScreen.style.display !== "none") {
-            welcomeScreen.style.display = "none";
-        }
 
-        const wrapper = document.createElement('div');
-        wrapper.className = `flex w-full ${sender === 'bot' ? 'justify-start' : 'justify-end'} animate-fade-in`;
+function addMessage(text, sender){
+if(welcomeScreen) welcomeScreen.style.display = 'none';
 
-        // Avatar for Bot
-        // Note: Using a placeholder SVG since wano-logo.png might not exist locally
-        const avatar = sender === 'bot' ? `
-            <div class="w-8 h-8 rounded-full overflow-hidden mr-3 border border-white/10 bg-slate-800 flex items-center justify-center flex-shrink-0">
-                 <span class="text-xs font-bold text-fuchsia-400">W</span>
-            </div>
-        ` : '';
 
-        // Message Bubble
-        const bubble = `
-            <div class="max-w-[85%] md:max-w-[75%] px-5 py-3.5 rounded-2xl shadow-sm ${sender === 'bot'
-            ? 'bg-slate-800 border border-white/5 text-slate-200 rounded-tl-none'
-            : 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white rounded-tr-none'}">
-            <div class="prose prose-invert prose-sm max-w-none leading-relaxed break-words">
-                ${sender === 'bot' ? marked.parse(text) : text}
-            </div>
-            </div>`;
+const box = document.createElement('div');
+box.className = sender === 'bot' ? 'text-left' : 'text-right';
 
-        wrapper.innerHTML = sender === 'bot' ? avatar + bubble : bubble;
-        chatContainer.appendChild(wrapper);
-        scrollToBottom();
-        
-        // Return the prose element for streaming updates
-        return wrapper.querySelector('.prose');
-    }
 
-    // --- Event Listener ---
-    form.addEventListener('submit', async e => {
-        e.preventDefault();
-        const msg = input.value.trim();
-        if (!msg) return;
+box.innerHTML = `
+<div class="inline-block max-w-[75%] px-4 py-3 rounded-2xl ${sender==='bot'
+? 'bg-slate-800 text-slate-200'
+: 'bg-purple-600 text-white'}">
+${sender==='bot'? marked.parse(text):text}
+</div>`;
 
-        // 1. Add User Message
-        addMessage(msg, 'user');
-        input.value = '';
-        
-        // 2. Show Typing Indicator
-        showTyping();
 
-        try {
-            // NOTE: This fetch call is simulated for demonstration because
-            // the placeholder API doesn't support streaming text responses exactly like an LLM.
-            // I've modified the logic slightly to handle the demo environment.
-            
-            /* // REAL IMPLEMENTATION (Uncomment this when you have a real backend)
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg })
-            });
-            */
+chatContainer.appendChild(box);
+scrollToBottom();
+return box.querySelector('div');
+}
 
-            // SIMULATED RESPONSE (For demo purposes)
-            // We simulate a network delay
-            await new Promise(r => setTimeout(r, 1000));
-            
-            hideTyping();
-            
-            // Create empty bot message box
-            const botBox = addMessage('', 'bot');
-            
-            // Simulate streaming text
-            const dummyResponse = "This is a simulated response. Since I don't have a real backend connected in this HTML file, I'm just echoing back that I received: **" + msg + "**.\n\nI can render Markdown too!\n- item 1\n- item 2";
-            
-            let currentText = '';
-            const words = dummyResponse.split(' ');
-            
-            for (let i = 0; i < words.length; i++) {
-                currentText += (i > 0 ? ' ' : '') + words[i];
-                botBox.innerHTML = marked.parse(currentText);
-                scrollToBottom();
-                await new Promise(r => setTimeout(r, 50)); // Typing effect
-            }
 
-            /* // REAL STREAMING LOGIC (Keep this for your actual implementation)
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-            let final = '';
+form.addEventListener('submit', async e => {
+e.preventDefault();
+const msg = input.value.trim();
+if(!msg) return;
 
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                final += decoder.decode(value);
-                botBox.innerHTML = marked.parse(final);
-                scrollToBottom();
-            }
-            */
 
-        } catch (err) {
-            hideTyping();
-            console.error(err);
-            addMessage('⚠️ Wano is offline. Check console for details.', 'bot');
-        }
-    });
+addMessage(msg,'user');
+input.value='';
+showTyping();
+
+
+const botBox = addMessage('', 'bot');
+
+
+try{
+const res = await fetch(API_URL,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({ message: msg })
+});
+
+
+hideTyping();
+
+
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+let full = '';
+
+
+while(true){
+const {value,done} = await reader.read();
+if(done) break;
+full += decoder.decode(value);
+botBox.innerHTML = marked.parse(full);
+scrollToBottom();
+}
+
+
+}catch(err){
+hideTyping();
+addMessage('⚠️ Backend connection failed','bot');
+}
+});
 </script>
 </body>
 </html>
