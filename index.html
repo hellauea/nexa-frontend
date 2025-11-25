@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description" content="Wano AI - Professional AI Assistant created by REVA University Cybersecurity Student">
+  <meta name="description" content="Wano AI - Professional AI Assistant for Cybersecurity & Technology">
   <meta name="theme-color" content="#4f46e5">
-  <title>Wano AI | REVA University</title>
+  <title>Wano AI | Cybersecurity Assistant</title>
   
   <link rel="icon" href="wano-logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -147,13 +147,13 @@
       </div>
       <div>
         <h1 class="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Wano AI</h1>
-        <p class="text-xs text-slate-400">By REVA University Cybersecurity</p>
+        <p class="text-xs text-slate-400">Cybersecurity & Technology Assistant</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
       <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-full border border-slate-700/50">
         <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-        <span class="text-xs text-slate-300">Online</span>
+        <span class="text-xs text-slate-300" id="connection-status">Online</span>
       </div>
     </div>
   </header>
@@ -169,8 +169,9 @@
         <h2 class="text-xl font-bold text-white mb-2">Welcome to Wano AI</h2>
         <p class="text-slate-300 mb-3">Professional AI Assistant specializing in Cybersecurity & Technology</p>
         <div class="text-xs text-slate-400 space-y-1">
-          <p>🔒 Created by REVA University Cybersecurity Student</p>
+          <p>🔒 Enterprise-grade security focus</p>
           <p>💡 Ask me about security, programming, or system administration</p>
+          <p>⚡ Fast, reliable responses</p>
         </div>
       </div>
     </div>
@@ -227,13 +228,14 @@
         </span>
       </p>
       <p class="text-[10px] text-slate-600 mt-2">
-        Wano AI • REVA University Cybersecurity • v2.0.0
+        Wano AI • Enterprise Edition • v2.0.0
       </p>
     </div>
   </div>
 
 <script>
-const API_URL = "https://your-render-backend-url.onrender.com/ask"; // Update this
+// Configuration - UPDATE THIS URL to your actual backend URL
+const API_URL = "https://your-wano-backend.onrender.com/ask";
 
 // DOM Elements
 const chat = document.getElementById("chat");
@@ -243,9 +245,32 @@ const micBtn = document.getElementById("mic-btn");
 const statusText = document.getElementById("status-text");
 const sendBtn = document.getElementById("send-btn");
 const charCount = document.getElementById("char-count");
+const connectionStatus = document.getElementById("connection-status");
 
 // State Management
 let isProcessing = false;
+
+// Test backend connection on startup
+async function testBackendConnection() {
+  try {
+    const response = await fetch(API_URL.replace('/ask', ''), {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      connectionStatus.textContent = 'Online';
+      console.log('✅ Backend connection successful');
+    } else {
+      connectionStatus.textContent = 'Connection Issues';
+      connectionStatus.parentElement.querySelector('.bg-green-400').className = 'w-2 h-2 bg-yellow-400 rounded-full animate-pulse';
+    }
+  } catch (error) {
+    console.error('❌ Backend connection failed:', error);
+    connectionStatus.textContent = 'Offline';
+    connectionStatus.parentElement.querySelector('.bg-green-400').className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+  }
+}
 
 // --- UI Helpers ---
 
@@ -394,13 +419,12 @@ form.addEventListener("submit", async e => {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { 
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({ message: msg }),
       signal: controller.signal
@@ -409,7 +433,7 @@ form.addEventListener("submit", async e => {
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     }
 
     const data = await res.json();
@@ -427,13 +451,13 @@ form.addEventListener("submit", async e => {
     removeTypingIndicator();
     
     if (err.name === 'AbortError') {
-      addMessage("Request timeout. Please check your connection and try again.", "ai");
+      addMessage("⏱️ Request timeout. The server is taking too long to respond. Please try again.", "ai");
+    } else if (err.message.includes('Failed to fetch')) {
+      addMessage("🌐 Connection error. Please check:<br>• Your internet connection<br>• Backend server status<br>• CORS configuration", "ai");
     } else if (err.message.includes('HTTP 5')) {
-      addMessage("Server is temporarily unavailable. Please try again in a moment.", "ai");
-    } else if (err.message.includes('HTTP 4')) {
-      addMessage("There was an issue with your request. Please try again.", "ai");
+      addMessage("🔧 Server error. The backend service is experiencing issues. Please try again later.", "ai");
     } else {
-      addMessage("Network error. Please check your internet connection and try again.", "ai");
+      addMessage("❌ Error: " + err.message, "ai");
     }
   } finally {
     isProcessing = false;
@@ -457,6 +481,7 @@ input.addEventListener("keydown", (e) => {
 window.addEventListener('load', () => {
   input.focus();
   updateCharCount();
+  testBackendConnection(); // Test connection on startup
 });
 
 // Prevent form submission on Enter key in input
@@ -468,13 +493,12 @@ input.addEventListener('keypress', (e) => {
 
 // Online status indicator
 window.addEventListener('online', () => {
-  const status = document.querySelector('.bg-green-400');
-  if (status) status.className = 'w-2 h-2 bg-green-400 rounded-full animate-pulse';
+  testBackendConnection();
 });
 
 window.addEventListener('offline', () => {
-  const status = document.querySelector('.bg-green-400');
-  if (status) status.className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
+  connectionStatus.textContent = 'Offline';
+  connectionStatus.parentElement.querySelector('.w-2').className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
 });
 </script>
 
