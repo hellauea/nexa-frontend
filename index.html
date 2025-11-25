@@ -1,92 +1,84 @@
 <!DOCTYPE html>
-class="flex-1 bg-slate-800 p-4 rounded-xl outline-none">
-<button class="bg-purple-600 px-5 rounded-xl">Send</button>
-</form>
-</footer>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wano AI</title>
 
+  <link rel="icon" href="wano-logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    body { background:#0f172a; }
+  </style>
+</head>
+
+<body class="text-white h-screen flex flex-col">
+
+<header class="bg-slate-900 p-4 flex items-center gap-3">
+  <img src="wano-logo.png" class="w-10 h-10 rounded-full">
+  <h1 class="text-lg font-bold">Wano AI</h1>
+</header>
+
+<div id="chat" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+<form id="chat-form" class="p-4 border-t border-slate-700 flex gap-2">
+  <input id="user-input" placeholder="Message Wano..."
+    class="flex-1 bg-slate-800 p-4 rounded-xl outline-none">
+  <button class="bg-purple-600 px-5 rounded-xl">Send</button>
+</form>
 
 <script>
-const API_URL = "https://nexa-ai-nd5x.onrender.com/ask"; // ✅ YOUR REAL BACKEND
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
 
-
-const chatContainer = document.getElementById('chat-container');
-const typingIndicator = document.getElementById('typing-indicator');
-const welcomeScreen = document.getElementById('welcome-screen');
-const form = document.getElementById('chat-form');
-const input = document.getElementById('user-input');
-
-
-function scrollToBottom(){ chatContainer.scrollTop = chatContainer.scrollHeight; }
-function showTyping(){ typingIndicator.classList.remove('hidden'); }
-function hideTyping(){ typingIndicator.classList.add('hidden'); }
-
+const chat = document.getElementById("chat");
+const form = document.getElementById("chat-form");
+const input = document.getElementById("user-input");
 
 function addMessage(text, sender){
-if(welcomeScreen) welcomeScreen.style.display = 'none';
-
-
-const box = document.createElement('div');
-box.className = sender === 'bot' ? 'text-left' : 'text-right';
-
-
-box.innerHTML = `
-<div class="inline-block max-w-[75%] px-4 py-3 rounded-2xl ${sender==='bot'
-? 'bg-slate-800 text-slate-200'
-: 'bg-purple-600 text-white'}">
-${sender==='bot'? marked.parse(text):text}
-</div>`;
-
-
-chatContainer.appendChild(box);
-scrollToBottom();
-return box.querySelector('div');
+  const div = document.createElement("div");
+  div.className = sender === "user" ? "text-right" : "text-left";
+  div.innerHTML = `<div class="inline-block bg-slate-800 p-3 rounded-xl">${text}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const msg = input.value.trim();
+  if(!msg) return;
 
-form.addEventListener('submit', async e => {
-e.preventDefault();
-const msg = input.value.trim();
-if(!msg) return;
+  addMessage(msg, "user");
+  input.value = "";
 
+  const botBox = document.createElement("div");
+  botBox.className = "text-left";
+  chat.appendChild(botBox);
 
-addMessage(msg,'user');
-input.value='';
-showTyping();
+  try {
+    const res = await fetch(API_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ message: msg })
+    });
 
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let full = "";
 
-const botBox = addMessage('', 'bot');
+    while(true){
+      const {value,done} = await reader.read();
+      if(done) break;
+      full += decoder.decode(value);
+      botBox.innerHTML = `<div class="inline-block bg-slate-800 p-3 rounded-xl">${full}</div>`;
+    }
 
-
-try{
-const res = await fetch(API_URL,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({ message: msg })
-});
-
-
-hideTyping();
-
-
-const reader = res.body.getReader();
-const decoder = new TextDecoder();
-let full = '';
-
-
-while(true){
-const {value,done} = await reader.read();
-if(done) break;
-full += decoder.decode(value);
-botBox.innerHTML = marked.parse(full);
-scrollToBottom();
-}
-
-
-}catch(err){
-hideTyping();
-addMessage('⚠️ Backend connection failed','bot');
-}
+  } catch {
+    addMessage("Backend not responding ❌", "bot");
+  }
 });
 </script>
+
 </body>
 </html>
