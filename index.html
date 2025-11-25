@@ -2,21 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Prevents zooming on mobile inputs and ensures full width -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Wano</title>
-  
-  <!-- Icon for the browser tab -->
   <link rel="icon" href="wano-logo.png" />
-  
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Marked Library for Markdown Rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
-    /* Custom Scrollbar for Webkit */
     ::-webkit-scrollbar {
       width: 6px;
     }
@@ -31,7 +23,6 @@
       background: #64748b; 
     }
 
-    /* Animation for the microphone pulse */
     @keyframes pulse-ring {
       0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
       70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
@@ -39,10 +30,9 @@
     }
     .listening {
       animation: pulse-ring 1.5s infinite;
-      background-color: #ef4444 !important; /* Red color when active */
+      background-color: #ef4444 !important;
     }
 
-    /* Markdown Styles within Chat */
     .prose p { margin-bottom: 0.5em; }
     .prose pre { background: #1e293b; padding: 10px; border-radius: 8px; overflow-x: auto; }
     .prose code { font-family: monospace; background: #334155; padding: 2px 4px; border-radius: 4px; }
@@ -56,10 +46,7 @@
   <!-- Header -->
   <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4 flex items-center gap-3 shrink-0 z-10">
     <div class="relative w-10 h-10">
-      <!-- Logo Image: references local file wano-logo.png -->
       <img src="wano-logo.png" onerror="this.src='https://placehold.co/40x40/6366f1/ffffff?text=W'" class="w-full h-full rounded-full object-cover shadow-lg border border-slate-700" alt="Wano Logo">
-      
-      <!-- Online Status Dot -->
       <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full"></span>
     </div>
     <div>
@@ -84,7 +71,6 @@
       
       <!-- Microphone Button -->
       <button type="button" id="mic-btn" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors shrink-0 flex items-center justify-center border border-slate-700" title="Speak">
-        <!-- SVG Mic Icon -->
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -118,8 +104,7 @@
   </div>
 
 <script>
-// Use the backend URL provided
-const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask"; // Update this to your Wano backend URL
 
 const chat = document.getElementById("chat");
 const form = document.getElementById("chat-form");
@@ -160,7 +145,7 @@ function addMessage(text, sender) {
   
   chat.appendChild(div);
   scrollToBottom();
-  return div.querySelector('.prose'); 
+  return div;
 }
 
 // --- Speech Recognition Setup ---
@@ -196,8 +181,7 @@ if (SpeechRecognition) {
     const transcript = event.results[0][0].transcript;
     if (transcript) {
       input.value = transcript;
-      // Auto send after 0.5s
-      setTimeout(() => form.dispatchEvent(new Event('submit')), 500); 
+      setTimeout(() => form.dispatchEvent(new Event('submit')), 500);
     }
   };
 } else {
@@ -205,7 +189,7 @@ if (SpeechRecognition) {
   console.warn("Speech Recognition API not supported in this browser.");
 }
 
-// --- Chat Logic ---
+// --- Chat Logic (Fixed - No Streaming) ---
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
@@ -216,19 +200,17 @@ form.addEventListener("submit", async e => {
   input.value = "";
   input.focus();
 
-  const botRow = document.createElement("div");
-  botRow.className = "flex gap-3";
-  botRow.innerHTML = `
+  // Add loading indicator
+  const loadingDiv = document.createElement("div");
+  loadingDiv.className = "flex gap-3";
+  loadingDiv.innerHTML = `
     <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 text-xs font-bold shadow-lg shadow-indigo-500/30">AI</div>
-    <div class="bg-slate-800/50 text-slate-200 border border-slate-700/50 rounded-2xl rounded-tl-none p-3.5 max-w-[85%] sm:max-w-[75%] prose prose-invert text-sm sm:text-base leading-relaxed">
-      <span class="animate-pulse">...</span>
+    <div class="bg-slate-800/50 text-slate-200 border border-slate-700/50 rounded-2xl rounded-tl-none p-3.5 max-w-[85%] sm:max-w-[75%]">
+      <span class="animate-pulse">Thinking...</span>
     </div>
   `;
-  chat.appendChild(botRow);
+  chat.appendChild(loadingDiv);
   scrollToBottom();
-
-  const botContentDiv = botRow.querySelector('.prose');
-  let fullText = "";
 
   try {
     const res = await fetch(API_URL, {
@@ -237,27 +219,32 @@ form.addEventListener("submit", async e => {
       body: JSON.stringify({ message: msg })
     });
 
-    if (!res.ok) throw new Error("Network response was not ok");
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    const data = await res.json();
     
-    botContentDiv.innerHTML = ""; // clear dots
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value, { stream: true });
-      fullText += chunk;
-      botContentDiv.innerHTML = marked.parse(fullText);
-      scrollToBottom();
+    // Remove loading indicator
+    loadingDiv.remove();
+    
+    // Add AI response
+    if (data.reply) {
+      addMessage(data.reply, "ai");
+    } else {
+      addMessage("⚠️ No response received from Wano.", "ai");
     }
 
   } catch (err) {
-    console.error(err);
-    botContentDiv.innerHTML = `<span class="text-red-400">Error: Could not reach Wano. Ensure backend is running.</span>`;
+    console.error("Error:", err);
+    loadingDiv.remove();
+    addMessage("⚠️ Error: Could not reach Wano. Please check your connection and try again.", "ai");
   }
+});
+
+// Auto-focus input on load
+window.addEventListener('load', () => {
+  input.focus();
 });
 </script>
 
