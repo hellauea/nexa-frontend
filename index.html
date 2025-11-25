@@ -13,7 +13,7 @@
 
 
 <style>
-body {font-family:'Inter',sans-serif;background:#020617;overflow:hidden;}
+body{font-family:'Inter',sans-serif;background:#020617;overflow:hidden;}
 .typing-dot{animation:wave 1.5s infinite ease-in-out;}
 @keyframes wave{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-5px);opacity:1}}
 </style>
@@ -24,7 +24,12 @@ body {font-family:'Inter',sans-serif;background:#020617;overflow:hidden;}
 <div class="w-full max-w-5xl h-[95vh] flex flex-col bg-slate-900/60 rounded-3xl border border-white/10">
 
 
-<div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8"></div>
+<div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8">
+<div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center space-y-6">
+<h2 class="text-3xl font-bold text-white">Hello, Human.</h2>
+<p class="text-slate-400">I am Nexa. How can I help you today?</p>
+</div>
+</div>
 
 
 <div id="typing-indicator" class="hidden px-6 py-4 flex gap-2">
@@ -44,19 +49,79 @@ body {font-family:'Inter',sans-serif;background:#020617;overflow:hidden;}
 
 
 <script>
-const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
-let conversation = [];
-const chatContainer = document.getElementById('chat');
-const typingIndicator = document.getElementById('typing-indicator');
+const API_URL="https://nexa-ai-nd5x.onrender.com/ask";
+let conversation=[];
+const chatContainer=document.getElementById('chat');
+const typingIndicator=document.getElementById('typing-indicator');
+const welcomeScreen=document.getElementById('welcome-screen');
 
 
-function scrollToBottom(){chatContainer.scrollTop = chatContainer.scrollHeight;}
+function scrollToBottom(){chatContainer.scrollTop=chatContainer.scrollHeight;}
 function showTyping(){typingIndicator.classList.remove('hidden');}
 function hideTyping(){typingIndicator.classList.add('hidden');}
 
 
-function addMessage(text, sender){
-const div=document.createElement('div');
-div.innerHTML=`<div class="p-4 rounded-xl ${sender==='bot'?'bg-slate-800':'bg-indigo-600'} text-white">${text}</div>`;
-chatContainer.appendChild(div);
+function addMessage(text,sender){
+if(welcomeScreen) welcomeScreen.style.display='none';
+
+
+const wrapper=document.createElement('div');
+wrapper.className=`flex ${sender==='bot'?'justify-start':'justify-end'}`;
+
+
+const bubble=document.createElement('div');
+bubble.className=`max-w-[70%] p-4 rounded-xl ${sender==='bot'?'bg-slate-800':'bg-indigo-600'} text-white`;
+bubble.innerHTML=text;
+
+
+wrapper.appendChild(bubble);
+chatContainer.appendChild(wrapper);
+scrollToBottom();
+}
+
+
+document.getElementById('chat-form').addEventListener('submit',async e=>{
+e.preventDefault();
+const input=document.getElementById('user-input');
+const msg=input.value.trim();
+if(!msg) return;
+
+
+addMessage(msg,'user');
+input.value='';
+conversation.push({role:'user',content:msg});
+showTyping();
+
+
+addMessage('', 'bot');
+const botBubble=chatContainer.lastElementChild.querySelector('div');
+
+
+try{
+const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:conversation})});
+hideTyping();
+
+
+const reader=res.body.getReader();
+const decoder=new TextDecoder();
+let finalText='';
+
+
+while(true){
+const {value,done}=await reader.read();
+if(done) break;
+finalText+=decoder.decode(value);
+botBubble.innerHTML=marked.parse(finalText);
+scrollToBottom();
+}
+
+
+conversation.push({role:'assistant',content:finalText});
+}catch(err){
+hideTyping();
+addMessage('Connection error','bot');
+}
+});
+</script>
+</body>
 </html>
