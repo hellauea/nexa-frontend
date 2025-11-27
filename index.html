@@ -262,7 +262,7 @@
 // ⚠️ IMPORTANT: UPDATE THE URL BELOW WITH YOUR ACTUAL BACKEND
 // ============================================================
 
-https://nexa-frontend-lc4g.onrender.com
+const API_URL = "https://nexa-ai-nd5x.onrender.com/ask";
 
 // ============================================================
 // ⚠️ REPLACE "YOUR-REAL-BACKEND-URL" WITH YOUR ACTUAL RENDER URL
@@ -321,7 +321,7 @@ async function testBackendConnection() {
         <strong>Steps to fix:</strong><br>
         1. Go to your Render dashboard<br>
         2. Copy your backend URL (looks like https://your-app-name.onrender.com)<br>
-        3. Replace the API_URL in the code (Line 430)<br>
+        3. Replace the API_URL in the code<br>
         4. Redeploy your frontend
       `, "ai");
     }
@@ -583,8 +583,11 @@ if (SpeechRecognition) {
       input.value = transcript;
       updateCharCount();
       setTimeout(() => {
-        form.dispatchEvent(new Event('submit', { cancelable: true }));
-      }, 300);
+        const msg = input.value.trim();
+        if (msg) {
+          sendMessageToAI(msg);
+        }
+      }, 500);
     }
   };
 
@@ -608,7 +611,8 @@ function resetMicState() {
 
 // --- Chat Logic ---
 
-form.addEventListener("submit", async e => {
+// FIXED: Proper form submission handling
+form.addEventListener("submit", function(e) {
   e.preventDefault();
   const msg = input.value.trim();
   if (!msg) return;
@@ -616,32 +620,36 @@ form.addEventListener("submit", async e => {
   sendMessageToAI(msg);
 });
 
+// FIXED: Enter key handling
+input.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    const msg = input.value.trim();
+    if (!msg) return;
+    
+    sendMessageToAI(msg);
+  }
+});
+
 // --- Event Listeners ---
 
 input.addEventListener("input", updateCharCount);
 
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-  }
-});
-
 clearChatBtn.addEventListener("click", clearChat);
 
 // Auto-focus and initialize
-window.addEventListener('load', () => {
+window.addEventListener('load', function() {
   input.focus();
   updateCharCount();
   testBackendConnection();
 });
 
 // Online status indicator
-window.addEventListener('online', () => {
+window.addEventListener('online', function() {
   testBackendConnection();
 });
 
-window.addEventListener('offline', () => {
+window.addEventListener('offline', function() {
   connectionStatus.textContent = 'Offline';
   statusDot.className = 'w-2 h-2 bg-red-400 rounded-full animate-pulse';
 });
